@@ -1,0 +1,17 @@
+{
+  "name": "download-factory-root",
+  "version": "1.0.0",
+  "description": "Instagram & Facebook Media Downloader System",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "backend": "cd backend && npm run dev",
+    "worker": "cd backend && npm run worker",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently --kill-others-on-fail \"npm run backend\" \"npm run worker\" \"npm run frontend\"",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
