@@ -3,6 +3,7 @@ const { addDownloadJob, getJob } = require('../queue/downloadQueue');
 const { successResponse, errorResponse } = require('../utils/helpers');
 const { JOB_STATUS } = require('../config/constants');
 const { logger } = require('../utils/logger');
+const axios = require('axios');
 
 /**
  * Initiates the download process by validating the URL and pushing a job to the queue.
@@ -84,4 +85,27 @@ async function status(req, res) {
   }
 }
 
-module.exports = { extract, status };
+async function proxy(req, res) {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json(errorResponse('URL is required for proxying', 'MISSING_URL'));
+    }
+
+    const response = await axios({
+      method: 'GET',
+      url: url,
+      responseType: 'stream',
+    });
+
+    res.setHeader('Content-Disposition', 'attachment; filename="download.mp4"');
+    res.setHeader('Content-Type', 'video/mp4');
+
+    response.data.pipe(res);
+  } catch (error) {
+    logger.error('Error proxying download:', error.message);
+    return res.status(500).json(errorResponse('Failed to proxy download file', 'PROXY_ERROR'));
+  }
+}
+
+module.exports = { extract, status, proxy };

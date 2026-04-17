@@ -35,7 +35,7 @@ async function extractWithYtdlp(url, attempt = 1) {
   ];
 
   return new Promise((resolve, reject) => {
-    const child = execFile('yt-dlp', args, {
+    const child = execFile('python', ['-m', 'yt_dlp', ...args], {
       timeout: TIMEOUT_MS,
       maxBuffer: 10 * 1024 * 1024, // 10 MB
       windowsHide: true,
@@ -99,14 +99,17 @@ function normaliseYtdlpData(raw) {
       height: f.height || null,
       filesize: f.filesize || f.filesize_approx || null,
       url: f.url,
-      hasVideo: (f.vcodec && f.vcodec !== 'none') || false,
-      hasAudio: (f.acodec && f.acodec !== 'none') || false,
+      hasVideo: f.vcodec !== 'none',
+      hasAudio: f.acodec !== 'none',
     }));
 
-  // Prefer combined video+audio format, or best video
+  // yt-dlp sorts from worst to best. We reverse it to be best to worst.
+  formats.reverse();
+
+  // Pick the highest quality format that contains BOTH video and audio
   const bestFormat = formats.find((f) => f.hasVideo && f.hasAudio)
     || formats.find((f) => f.hasVideo)
-    || formats[formats.length - 1]
+    || formats[0]
     || null;
 
   return {
@@ -119,8 +122,9 @@ function normaliseYtdlpData(raw) {
     uploadDate: raw.upload_date || '',
     viewCount: raw.view_count || 0,
     likeCount: raw.like_count || 0,
+    // Use the combined format URL. If none exists, fallback to raw.url
     videoUrl: bestFormat?.url || raw.url || '',
-    formats: formats.slice(0, 10), // Cap at 10 formats
+    formats: formats.slice(0, 10), // Cap at 10 best formats
     platform: raw.extractor_key || raw.extractor || 'unknown',
     originalUrl: raw.webpage_url || raw.original_url || '',
   };

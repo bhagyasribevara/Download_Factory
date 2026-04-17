@@ -42,6 +42,7 @@ module.exports = {
       /^https?:\/\/(www\.|m\.)?facebook\.com\/watch\/?\?v=\d+/i,
       /^https?:\/\/(www\.|m\.)?facebook\.com\/reel\/\d+/i,
       /^https?:\/\/fb\.watch\/[\w-]+/i,
+      /^https?:\/\/(www\.|m\.|web\.)?facebook\.com\/share\/v\//i,
     ],
   },
 };

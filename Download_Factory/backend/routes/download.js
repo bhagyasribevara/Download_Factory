@@ -11,4 +11,9 @@ router.post('/extract', downloadController.extract);
 // Returns: { status, media?, progress? }
 router.get('/status/:jobId', downloadController.status);
 
+// GET /api/download/proxy
+// Query: ?url=...
+// Returns: File stream
+router.get('/proxy', downloadController.proxy);
+
 module.exports = router;

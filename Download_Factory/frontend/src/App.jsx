@@ -6,7 +6,7 @@ const Facebook = Link; // Temporary fallback if import fails, but I'll try to fi
 import { Toaster, toast } from 'react-hot-toast';
 
 // API Config
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 function App() {
   const [url, setUrl] = useState('');
@@ -288,41 +288,40 @@ function App() {
                 <div className="download-options">
                   <h3 style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Download Options</h3>
                   
-                  {mediaData.formats && mediaData.formats.length > 0 ? (
-                    mediaData.formats
-                    .filter(f => f.hasVideo && f.url && f.ext === 'mp4') // Prefer mp4
-                    .slice(0, 3) // Top 3 formats
-                    .map((format, index) => (
-                      <a 
-                        key={index} 
-                        href={format.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className={`download-btn ${index === 0 ? 'download-btn-primary' : ''}`}
-                        download
-                      >
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Video size={18} />
-                          {format.quality !== 'unknown' ? `MP4 • ${format.quality}` : 'Download Video (MP4)'}
-                        </span>
-                        <Download size={18} />
-                      </a>
-                    ))
-                  ) : mediaData.videoUrl ? (
-                    // Fallback button if formats array is empty but videoUrl exists
-                    <a 
-                      href={mediaData.videoUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="download-btn download-btn-primary"
-                      download
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Video size={18} /> Download High Quality (MP4)
-                      </span>
-                      <Download size={18} />
-                    </a>
-                  ) : null}
+                  {(() => {
+                    const validFormats = (mediaData.formats || [])
+                      .filter(f => f.hasVideo && f.hasAudio && f.url && f.ext === 'mp4')
+                      .slice(0, 3);
+                    
+                    if (validFormats.length > 0) {
+                      return validFormats.map((format, index) => (
+                        <a 
+                          key={index} 
+                          href={`${API_URL}/download/proxy?url=${encodeURIComponent(format.url)}`} 
+                          className={`download-btn ${index === 0 ? 'download-btn-primary' : ''}`}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Video size={18} />
+                            {format.quality !== 'unknown' ? `MP4 • ${format.quality}` : 'Download Video (MP4)'}
+                          </span>
+                          <Download size={18} />
+                        </a>
+                      ));
+                    } else if (mediaData.videoUrl) {
+                      return (
+                        <a 
+                          href={`${API_URL}/download/proxy?url=${encodeURIComponent(mediaData.videoUrl)}`}
+                          className="download-btn download-btn-primary"
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Video size={18} /> Download High Quality (MP4)
+                          </span>
+                          <Download size={18} />
+                        </a>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {/* Thumbnail Download */}
                   {mediaData.thumbnail && (
